@@ -1,0 +1,132 @@
+.history-container {
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+  padding: 20rpx;
+  background-color: white;
+  border-radius: 10rpx;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.header-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.clear-btn, .back-btn {
+  padding: 10rpx 20rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  border: none;
+}
+
+.clear-btn {
+  background-color: #ff6b6b;
+  color: white;
+}
+
+.back-btn {
+  background-color: #007aff;
+  color: white;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 20rpx;
+  text-align: center;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #666;
+  margin-bottom: 20rpx;
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.conversations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.conversation-item {
+  background-color: white;
+  border-radius: 10rpx;
+  padding: 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.1);
+}
+
+.conversation-content {
+  flex: 1;
+  margin-right: 20rpx;
+}
+
+.conversation-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.conversation-meta {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 10rpx;
+}
+
+.conversation-time {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.conversation-count {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.conversation-preview {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 500rpx;
+}
+
+.conversation-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.delete-btn {
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 6rpx;
+  padding: 8rpx 16rpx;
+  font-size: 24rpx;
+}

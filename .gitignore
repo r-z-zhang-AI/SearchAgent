@@ -1,0 +1,105 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+config.env
+
+# WeChat Mini Program specific
+project.private.config.json
+
+# Cloud function dependencies
+cloudfunctions/**/node_modules/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory
+coverage/
+*.lcov
+.nyc_output
+
+# Cache directories
+.cache/
+.npm/
+.eslintcache
+.stylelintcache
+
+# Build outputs
+build/
+dist/
+out/
+.next/
+.nuxt/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Archive files
+*.tar.gz
+*.zip
+*.rar
+
+# Test files
+test-results/
+coverage/
+
+# Documentation (if auto-generated)
+docs/build/
+
+# Serverless directories
+.serverless/
+
+# Optional: Excel files (uncomment if you don't want to track data files)
+# *.xlsx
+# *.xls
+
+# Optional: Image files (uncomment if you have many large images)
+# *.jpg
+# *.jpeg
+# *.png
+# *.gif
+# *.bmp
+# *.svg

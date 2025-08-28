@@ -1,0 +1,140 @@
+<!-- pages/chat/chat.wxml - 按照设计稿重新设计 -->
+<view class="page">
+  <!-- 顶部导航栏 -->
+  <view class="navbar">
+    <view class="nav-left">
+      <text class="menu-icon" bindtap="showConversationHistory">☰</text>
+      <text class="add-icon" bindtap="startNewConversation">+</text>
+    </view>
+    <text class="nav-title">{{conversationTitle}}</text>
+    <view class="nav-right">
+      <!-- 删除调试按钮 -->
+    </view>
+  </view>
+
+  <!-- 聊天容器 -->
+  <view class="chat-container">
+    <!-- 消息列表 -->
+    <scroll-view class="messages" scroll-y="true" scroll-into-view="{{scrollIntoView}}" bindtap="onMessagesAreaTap">
+
+      <!-- 欢迎消息 -->
+      <view wx:if="{{messages.length === 0}}" class="welcome-message">
+        <text class="welcome-text">您好！我是浙大智能科研匹配助手，我们先从哪里开始呢？</text>
+      </view>
+
+      <!-- 消息列表 -->
+      <view wx:for="{{messages}}" wx:key="id" class="message {{item.type}} {{selectedMessages.includes(item.id) ? 'selected' : ''}}"
+            bindlongpress="onMessageLongPress" data-id="{{item.id}}" data-type="message">
+
+        <!-- 选择框 -->
+        <view wx:if="{{showActionBar}}" class="selection-checkbox {{selectedMessages.includes(item.id) ? 'checked' : ''}}"
+              bindtap="toggleMessageSelection" data-id="{{item.id}}">
+          <image wx:if="{{selectedMessages.includes(item.id)}}" class="checkbox-icon" src="/images/tick.svg" mode="aspectFit"></image>
+        </view>
+
+        <view class="message-content">{{item.content}}</view>
+
+        <!-- AI回答的操作按钮 -->
+        <view wx:if="{{item.type === 'assistant' && item.showActions}}" class="message-actions">
+          <image class="action-icon regenerate-icon" src="/images/start-over.svg" mode="aspectFit"
+                 bindtap="regenerateAnswer" data-id="{{item.id}}"></image>
+          <image class="action-icon continue-icon" src="/images/continue.svg" mode="aspectFit"
+                 bindtap="continueAnswer" data-id="{{item.id}}"></image>
+        </view>
+      </view>
+
+      <!-- 教师卡片 -->
+      <view wx:for="{{teacherCards}}" wx:key="id" class="teacher-card {{selectedMessages.includes('teacher-' + item.id) ? 'selected' : ''}}"
+            bindlongpress="onMessageLongPress" data-id="{{'teacher-' + item.id}}" data-type="teacher">
+
+        <!-- 选择框 -->
+        <view wx:if="{{showActionBar}}" class="selection-checkbox {{selectedMessages.includes('teacher-' + item.id) ? 'checked' : ''}}"
+              bindtap="toggleMessageSelection" data-id="{{'teacher-' + item.id}}">
+          <image wx:if="{{selectedMessages.includes('teacher-' + item.id)}}" class="checkbox-icon" src="/images/tick.svg" mode="aspectFit"></image>
+        </view>
+
+        <view class="teacher-header">
+          <view class="teacher-basic">
+            <text class="teacher-name">{{item.name}}</text>
+            <text class="teacher-title">{{item.title}}</text>
+          </view>
+          <view class="teacher-actions">
+            <image class="star-icon" src="/images/star.svg" mode="aspectFit"></image>
+            <image class="share-icon" src="/images/share.svg" mode="aspectFit"></image>
+          </view>
+        </view>
+
+        <view class="teacher-content">
+          <view class="teacher-info-grid">
+            <view class="info-item">
+              <text class="info-label">研究方向:</text>
+              <text class="info-value">{{item.research}}</text>
+            </view>
+            <view class="info-item">
+              <text class="info-label">所属学院:</text>
+              <text class="info-value">{{item.department}}</text>
+            </view>
+            <view class="info-item">
+              <text class="info-label">联系邮箱:</text>
+              <text class="info-value">{{item.email}}</text>
+            </view>
+            <view class="info-item">
+              <text class="info-label">办公地点:</text>
+              <text class="info-value">{{item.office}}</text>
+            </view>
+          </view>
+
+          <view wx:if="{{item.achievements}}" class="teacher-achievements">
+            <text class="achievements-title">主要成就:</text>
+            <view class="achievements-list">
+              <text wx:for="{{item.achievements}}" wx:key="*this" class="achievement-item">• {{item}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 滚动锚点 -->
+      <view id="messagesEndRef"></view>
+    </scroll-view>
+
+    <!-- 输入区域 -->
+    <view class="input-area {{showActionBar ? 'with-action-bar' : ''}}">
+      <view class="input-container">
+        <input
+          class="message-input"
+          placeholder="请描述您的需求......"
+          value="{{inputValue}}"
+          bindinput="onInputChange"
+          bindconfirm="sendMessage"
+          disabled="{{isGenerating}}"
+        />
+        <button class="send-button {{isGenerating ? 'stop-button' : ''}}" bindtap="sendMessage">
+          <image class="send-icon" src="{{isGenerating ? '/images/pause.svg' : '/images/send.svg'}}" mode="aspectFit"></image>
+        </button>
+      </view>
+    </view>
+
+    <!-- 底部操作栏 -->
+    <view wx:if="{{showActionBar}}" class="action-bar">
+      <button class="action-bar-btn" bindtap="copySelectedContent">
+        <image class="action-icon" src="/images/copy-link.svg" mode="aspectFit"></image>
+        <text class="action-text">复制链接</text>
+      </button>
+      <button class="action-bar-btn" bindtap="shareToWeChat">
+        <image class="action-icon" src="/images/wechat-share.svg" mode="aspectFit"></image>
+        <text class="action-text">微信分享</text>
+      </button>
+      <button class="action-bar-btn" bindtap="generateShareImage">
+        <image class="action-icon" src="/images/share-long-image.svg" mode="aspectFit"></image>
+        <text class="action-text">分享长图</text>
+      </button>
+    </view>
+
+    <!-- 隐藏的Canvas用于生成分享图片 -->
+    <canvas
+      id="shareCanvas"
+      type="2d"
+      style="position: fixed; top: -9999px; left: -9999px; width: 750px; height: 1200px;"
+    ></canvas>
+  </view>
+</view>

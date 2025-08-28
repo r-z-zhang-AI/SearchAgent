@@ -1,0 +1,19 @@
+{
+  "pages": [
+    "pages/chat/chat",
+    "pages/history/history"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#e5e5e5",
+    "navigationBarTitleText": "智能科研匹配",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#e5e5e5"
+  },
+  "networkTimeout": {
+    "request": 8000,
+    "downloadFile": 10000
+  },
+  "debug": true,
+  "sitemapLocation": "sitemap.json"
+}

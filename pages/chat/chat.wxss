@@ -1,0 +1,494 @@
+/* pages/chat/chat.wxss - 按照设计稿重新设计 */
+
+/* 页面容器 */
+.page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #e5e5e5;
+}
+
+/* 顶部导航栏 */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 30rpx;
+  background: #e5e5e5;
+  border-bottom: 1rpx solid #d0d0d0;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 30rpx;
+}
+
+.menu-icon, .add-icon {
+  font-size: 36rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.nav-title {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.nav-right {
+  width: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.debug-btn {
+  font-size: 32rpx;
+  color: #666;
+  padding: 10rpx;
+}
+
+/* 聊天容器 */
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #e5e5e5;
+}
+
+/* 消息区域 */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 30rpx 30rpx 30rpx 80rpx; /* 左侧留出选择框空间，右侧适当留白 */
+  background: #e5e5e5;
+}
+
+/* 欢迎消息 */
+.welcome-message {
+  background: #f0f0f0;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+}
+
+.welcome-text {
+  color: #666;
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+/* 消息气泡 */
+.message {
+  margin-bottom: 20rpx;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* 用户消息 - 右对齐 */
+.message.user {
+  align-items: flex-end;
+}
+
+.message.user .message-content {
+  background: #f0f0f0;
+  color: #333;
+  border-radius: 20rpx 20rpx 5rpx 20rpx;
+  max-width: 80%;
+}
+
+/* AI消息 - 左对齐 */
+.message.assistant {
+  align-items: flex-start;
+}
+
+.message.assistant .message-content {
+  background: #f0f0f0;
+  color: #333;
+  border-radius: 20rpx 20rpx 20rpx 5rpx;
+  max-width: 85%;
+}
+
+.message-content {
+  padding: 30rpx;
+  font-size: 28rpx;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+/* 教师卡片 */
+.teacher-card {
+  background: white;
+  border-radius: 20rpx;
+  margin: 20rpx 0;
+  overflow: hidden;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.teacher-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+}
+
+.teacher-basic {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.teacher-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.teacher-title {
+  font-size: 24rpx;
+  color: #666;
+  font-weight: normal;
+}
+
+.teacher-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.star-icon, .share-icon {
+  width: 60rpx;
+  height: 60rpx;
+  padding: 15rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.8);
+  box-sizing: border-box;
+}
+
+.teacher-content {
+  padding: 30rpx;
+}
+
+.teacher-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+}
+
+.info-label {
+  font-size: 26rpx;
+  color: #666;
+  min-width: 140rpx;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 26rpx;
+  color: #333;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.teacher-achievements {
+  border-top: 1rpx solid #f0f0f0;
+  padding-top: 25rpx;
+}
+
+.achievements-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15rpx;
+  display: block;
+}
+
+.achievements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.achievement-item {
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* 教授卡片 */
+.professor-card {
+  background: white;
+  border: 1rpx solid #e8e8e8;
+  border-radius: 16rpx;
+  margin-top: 30rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
+}
+
+.professor-header {
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.professor-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.professor-title {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.professor-body {
+  padding: 30rpx;
+}
+
+.match-score {
+  background: #1890ff;
+  color: white;
+  padding: 8rpx 16rpx;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  display: inline-block;
+  margin-bottom: 20rpx;
+}
+
+.research-areas, .reasons, .contact-info {
+  margin-bottom: 20rpx;
+}
+
+.label {
+  font-weight: 600;
+  color: #333;
+  font-size: 26rpx;
+}
+
+.tags {
+  margin-top: 10rpx;
+}
+
+.research-tag {
+  display: inline-block;
+  background: #f0f8ff;
+  color: #1890ff;
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  margin: 4rpx 8rpx 4rpx 0;
+}
+
+.reason {
+  display: block;
+  margin: 8rpx 0;
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+
+.contact-line {
+  display: block;
+  margin: 8rpx 0;
+  font-size: 26rpx;
+}
+
+/* 追问建议 */
+.followup-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 30rpx;
+}
+
+.suggestion-button {
+  background: #f0f7ff;
+  border: 1rpx solid #d9e6f2;
+  border-radius: 32rpx;
+  padding: 12rpx 24rpx;
+  font-size: 26rpx;
+  color: #1890ff;
+  transition: all 0.2s;
+}
+
+.suggestion-button:active {
+  background: #e6f1ff;
+  border-color: #1890ff;
+}
+
+/* 输入区域 */
+.input-area {
+  background: #e5e5e5;
+  padding: 30rpx;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 50rpx;
+  padding: 10rpx 20rpx;
+  gap: 20rpx;
+}
+
+.message-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 28rpx;
+  padding: 20rpx;
+  background: transparent;
+}
+
+.send-button {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+/* 暂停状态按钮 - 保持图标原色 */
+.send-button.stop-button {
+  background: transparent;
+}
+
+.send-icon {
+  width: 60rpx;
+  height: 60rpx;
+}
+
+/* 消息操作按钮 */
+.message-actions {
+  position: absolute;
+  right: -80rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 15rpx;
+  z-index: 10;
+}
+
+.action-icon {
+  width: 60rpx;
+  height: 60rpx;
+  padding: 15rpx;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.action-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.2);
+}
+
+.regenerate-icon {
+  border: 2rpx solid #667eea;
+}
+
+.continue-icon {
+  border: 2rpx solid #4caf50;
+}
+
+/* 选择模式样式 */
+.message.selected, .teacher-card.selected {
+  background-color: rgba(0, 122, 255, 0.1);
+  border: 2rpx solid #007aff;
+}
+
+.selection-checkbox {
+  position: absolute;
+  left: -60rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40rpx;
+  height: 40rpx;
+  border: 2rpx solid #ccc;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.selection-checkbox.checked {
+  background: #007aff;
+  border-color: #007aff;
+}
+
+.checkbox-icon {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+/* 底部操作栏 */
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1rpx solid #e0e0e0;
+  padding: 15rpx 30rpx; /* 减少上下padding */
+  display: flex;
+  justify-content: space-around;
+  box-shadow: 0 -4rpx 12rpx rgba(0,0,0,0.1);
+  z-index: 1000;
+  height: 120rpx; /* 设置固定高度，原来约240rpx */
+}
+
+.action-bar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx; /* 减少间距 */
+  background: transparent;
+  border: none;
+  padding: 10rpx; /* 减少padding */
+  border-radius: 10rpx;
+}
+
+.action-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.action-text {
+  font-size: 22rpx; /* 稍微减小字体 */
+  color: #666;
+}
+
+/* 输入区域动态调整 */
+.input-area.with-action-bar {
+  margin-bottom: 120rpx; /* 当显示操作栏时，输入区域上移 */
+}
+
+/* 动画 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

@@ -1,0 +1,18 @@
+{
+  "envId": "cloud1-6g8dk2rk74e3d4e9",
+  "functionRoot": "./cloudfunctions",
+  "functions": [
+    {
+      "name": "importProfessorsData",
+      "runtime": "Nodejs16.13",
+      "handler": "index.main"
+    },
+    {
+      "name": "api",
+      "runtime": "Nodejs16.13",
+      "handler": "index.main",
+      "timeout": 30, 
+      "memorySize": 256
+    }
+  ]
+}
