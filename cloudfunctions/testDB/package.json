@@ -1,0 +1,9 @@
+{
+  "name": "test-db",
+  "version": "1.0.0",
+  "description": "Test database connection and data structure",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^2.10.5"
+  }
+}

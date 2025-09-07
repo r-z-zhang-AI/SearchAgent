@@ -1,0 +1,14 @@
+{
+  "functions": [
+    {
+      "name": "api",
+      "timeout": 60,
+      "envVariables": {},
+      "installDependency": true,
+      "ignore": [
+        "node_modules/**/*",
+        ".git/**/*"
+      ]
+    }
+  ]
+}

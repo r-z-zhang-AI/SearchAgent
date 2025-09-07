@@ -45,57 +45,75 @@ exports.main = async (event, context) => {
     try {
       // 直接处理聊天请求
       if (event.path === '/chat/message' && event.httpMethod === 'POST') {
-        const { parseIntent } = require('./services/intentParser');
-        const { matchProfessors } = require('./services/matchingService');
-        const { queryAchievements } = require('./services/achievementService');
-        const { generateGeneralReply } = require('./services/generalResponseService');
+        // 设置总体超时
+        const mainTimeout = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('云函数总体超时')), 25000); // 25秒总超时
+        });
 
-        const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
-        const { message, conversationId, context = [] } = body;
+        const processRequest = async () => {
+          const { parseIntent } = require('./services/intentParser');
+          const { matchProfessors } = require('./services/matchingService');
+          const { queryAchievements } = require('./services/achievementService');
+          const { generateGeneralReply } = require('./services/generalResponseService');
 
-        if (!message) {
-          return { error: 'Message is required' };
-        }
+          const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
+          const { message, conversationId, context = [] } = body;
 
-        // 分析消息类型和意图
-        const { messageType, intent } = await analyzeMessage(message, context);
+          if (!message) {
+            return { error: 'Message is required' };
+          }
 
-        let response = {
-          conversationId: conversationId || Date.now().toString(),
-          intent: intent,
-          messageType: messageType,
-          followupQuestions: []
+          console.log('开始处理消息:', message);
+          const startTime = Date.now();
+
+          // 分析消息类型和意图
+          const { messageType, intent } = await analyzeMessage(message, context);
+          console.log('意图分析耗时:', Date.now() - startTime, 'ms');
+
+          let response = {
+            conversationId: conversationId || Date.now().toString(),
+            intent: intent,
+            messageType: messageType,
+            followupQuestions: []
+          };
+
+          // 根据消息类型处理
+          switch (messageType) {
+            case 'professor_matching':
+              console.log('开始匹配教授，意图:', JSON.stringify(intent, null, 2));
+              const matchStart = Date.now();
+              const matches = await matchProfessors(intent, db);
+              console.log('匹配耗时:', Date.now() - matchStart, 'ms');
+              console.log('匹配结果数量:', matches.length);
+              if (matches.length > 0) {
+                console.log('第一个匹配结果:', JSON.stringify(matches[0], null, 2));
+              }
+              response.message = generateMatchingResponse(intent, matches);
+              response.matches = matches.slice(0, 5);
+              response.professors = matches.slice(0, 5).map(match => match.professor);
+              break;
+
+            case 'achievement_query':
+              const achievements = await queryAchievements(intent, db);
+              response.message = generateAchievementResponse(intent, achievements);
+              response.achievements = achievements;
+              break;
+
+            case 'general_query':
+              const generalStart = Date.now();
+              response.message = await generateGeneralReply(message, context);
+              console.log('通用回复耗时:', Date.now() - generalStart, 'ms');
+              break;
+
+            default:
+              response.message = "抱歉，我没有理解您的需求。您是想寻找合适的教授进行科研合作，还是有其他问题？";
+          }
+
+          console.log('总处理耗时:', Date.now() - startTime, 'ms');
+          return response;
         };
 
-        // 根据消息类型处理
-        switch (messageType) {
-          case 'professor_matching':
-            console.log('开始匹配教授，意图:', JSON.stringify(intent, null, 2));
-            const matches = await matchProfessors(intent, db);
-            console.log('匹配结果数量:', matches.length);
-            if (matches.length > 0) {
-              console.log('第一个匹配结果:', JSON.stringify(matches[0], null, 2));
-            }
-            response.message = generateMatchingResponse(intent, matches);
-            response.matches = matches.slice(0, 5);
-            response.professors = matches.slice(0, 5).map(match => match.professor);
-            break;
-
-          case 'achievement_query':
-            const achievements = await queryAchievements(intent, db);
-            response.message = generateAchievementResponse(intent, achievements);
-            response.achievements = achievements;
-            break;
-
-          case 'general_query':
-            response.message = await generateGeneralReply(message, context);
-            break;
-
-          default:
-            response.message = "抱歉，我没有理解您的需求。您是想寻找合适的教授进行科研合作，还是有其他问题？";
-        }
-
-        return response;
+        return await Promise.race([processRequest(), mainTimeout]);
       }
 
       // 健康检查
@@ -106,6 +124,16 @@ exports.main = async (event, context) => {
       return { error: 'Not found', path: event.path };
     } catch (error) {
       console.error('云函数处理错误:', error);
+      
+      // 如果是超时错误，返回友好的错误信息
+      if (error.message.includes('超时')) {
+        return { 
+          error: 'Request timeout', 
+          message: '处理请求超时，请稍后重试。如果问题持续存在，请简化您的问题描述。',
+          timeout: true
+        };
+      }
+      
       return { error: 'Internal server error', message: error.message };
     }
   }

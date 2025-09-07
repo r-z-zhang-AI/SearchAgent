@@ -26,19 +26,11 @@
 }
 
 .clear-btn, .back-btn {
-  padding: 10rpx 20rpx;
-  border-radius: 8rpx;
+  padding: 12rpx 24rpx;
+  border-radius: 20rpx; /* 圆角长方形 */
   font-size: 28rpx;
   border: none;
-}
-
-.clear-btn {
-  background-color: #ff6b6b;
-  color: white;
-}
-
-.back-btn {
-  background-color: #007aff;
+  background-color: #8E8E93; /* 统一灰色 */
   color: white;
 }
 
@@ -123,10 +115,10 @@
 }
 
 .delete-btn {
-  background-color: #ff6b6b;
+  background-color: #8E8E93; /* 统一灰色 */
   color: white;
   border: none;
-  border-radius: 6rpx;
-  padding: 8rpx 16rpx;
+  border-radius: 20rpx; /* 圆角长方形 */
+  padding: 10rpx 20rpx;
   font-size: 24rpx;
 }

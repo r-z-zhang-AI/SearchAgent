@@ -1,21 +1,11 @@
-const { OpenAI } = require('openai');
+const { callDeepSeekAPI } = require('./mockDeepSeekService');
 
-// DeepSeek API配置
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || 'sk-f02583dd00124c8992bb346c1391c518';
-const DEEPSEEK_BASE_URL = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
-
-// 初始化DeepSeek客户端
-const client = new OpenAI({
-  apiKey: DEEPSEEK_API_KEY,
-  baseURL: DEEPSEEK_BASE_URL,
-});
+// 简单的内存缓存
+const reasonsCache = new Map();
 
 // 解析用户意图
 async function parseIntent(userInput, context = []) {
   try {
-    console.log('开始调用DeepSeek API解析意图...');
-    console.log('用户输入:', userInput);
-
     const prompt = `请分析以下用户输入，判断用户意图并提取关键信息：
 
 用户输入：${userInput}
@@ -44,90 +34,72 @@ ${context.map((msg, i) => `${i % 2 === 0 ? '用户' : '系统'}：${msg}`).join(
 
 请确保返回的是有效的JSON格式。`;
 
-    console.log('正在调用DeepSeek API...');
-    const response = await client.chat.completions.create({
-      model: 'deepseek-chat',
-      messages: [
-        {
-          role: 'system',
-          content: '你是一个专业的科研需求分析助手，能够准确解析企业用户的科研合作需求。'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
+    // 调用原生 DeepSeek API，设置10秒超时
+    const response = await callDeepSeekAPI([
+      {
+        role: 'system',
+        content: '你是一个专业的科研需求分析助手，能够准确解析企业用户的科研合作需求。'
+      },
+      {
+        role: 'user',
+        content: prompt
+      }
+    ], 10000, {
       temperature: 0.3,
       max_tokens: 500
     });
 
-    console.log('DeepSeek API调用成功');
-    const result = response.choices[0].message.content;
-    console.log('DeepSeek返回结果:', result);
-
-    // 尝试解析JSON
-    try {
+    if (response.success && response.content) {
       // 处理可能包含Markdown代码块的情况
-      let jsonStr = result;
-
+      let jsonStr = response.content;
+      
       // 移除可能的Markdown代码块标记
-      if (result.includes('```json')) {
-        jsonStr = result.replace(/```json\n|\n```/g, '');
-      } else if (result.includes('```')) {
-        jsonStr = result.replace(/```\n|\n```/g, '');
+      if (jsonStr.includes('```json')) {
+        jsonStr = jsonStr.replace(/```json\n|\n```/g, '');
+      } else if (jsonStr.includes('```')) {
+        jsonStr = jsonStr.replace(/```\n|\n```/g, '');
       }
-
+      
       // 尝试找到JSON对象的开始和结束位置
       const startIdx = jsonStr.indexOf('{');
       const endIdx = jsonStr.lastIndexOf('}') + 1;
-
+      
       if (startIdx >= 0 && endIdx > startIdx) {
         jsonStr = jsonStr.substring(startIdx, endIdx);
       }
-
+      
       const parsed = JSON.parse(jsonStr);
-      console.log('意图解析结果:', JSON.stringify(parsed, null, 2));
       return {
         originalQuery: userInput,
         ...parsed
       };
-    } catch (parseError) {
-      console.error('JSON解析失败:', parseError);
-      console.log('原始回复:', result);
-      // 如果JSON解析失败，返回默认结构
-      return {
-        originalQuery: userInput,
-        techDomains: [],
-        cooperationType: 'general',
-        requirements: [],
-        urgency: 'normal',
-        budget: 'unknown'
-      };
+    } else {
+      throw new Error('DeepSeek API 返回异常');
     }
+
   } catch (error) {
-    console.error('DeepSeek API调用失败:', error);
-    console.error('错误详情:', error.message);
-    console.error('错误堆栈:', error.stack);
-    // 如果API调用失败，返回默认结构
+    console.error('Intent parsing error:', error);
+    
+    // 如果是超时或网络错误，使用本地解析作为备选
+    if (error.message && (error.message.includes('超时') || error.message.includes('timeout'))) {
+      console.log('使用本地简化解析作为备选');
+      return parseIntentLocally(userInput);
+    }
+    
+    // 返回默认结构
     return {
       originalQuery: userInput,
-      isProfessorMatching: userInput.includes('教授') || userInput.includes('导师') || userInput.includes('老师'),
-      isAchievementQuery: userInput.includes('成果') || userInput.includes('论文') || userInput.includes('专利'),
+      isProfessorMatching: false,
+      isAchievementQuery: false,
       isVague: true,
       techDomains: [],
-      cooperationType: 'unknown',
+      cooperationType: 'general',
       requirements: [],
-      query: '',
-      professorName: '',
-      urgency: '未指定',
-      budget: '未指定'
+      urgency: 'normal',
+      budget: 'unknown'
     };
   }
 }
-
-// 简单的内存缓存
-const reasonsCache = new Map();
-
 // 生成匹配理由
 async function generateMatchReasons(intent, professor) {
   // 生成缓存键
@@ -151,37 +123,55 @@ async function generateMatchReasons(intent, professor) {
 研究方向：${(professor.research_areas || []).join(', ') || '未提供'}
 代表性成果：${(professor.achievements || []).slice(0, 3).map(a => a.title).join(', ') || '未提供'}
 
-请生成2-3条匹配理由，用中文回答，每条理由用分号分隔。`;
+要求：
+1. 生成2-3条简洁的匹配理由
+2. 每条理由不超过80字
+3. 突出关键匹配点，避免冗余描述
+4. 用中文回答，每条理由用分号分隔
+5. 语言简洁明了，重点突出`;
 
-    const response = await client.chat.completions.create({
-      model: 'deepseek-chat',
-      messages: [
-        {
-          role: 'system',
-          content: '你是一个专业的科研匹配助手，能够为教授匹配生成合理的理由。'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
+    // 使用原生 DeepSeek API，设置8秒超时
+    const response = await callDeepSeekAPI([
+      {
+        role: 'system',
+        content: '你是一个专业的科研匹配助手。请生成简洁精准的匹配理由，每条理由不超过80字，重点突出关键匹配点，避免冗余表述。'
+      },
+      {
+        role: 'user',
+        content: prompt
+      }
+    ], 8000, {
       temperature: 0.3,
-      max_tokens: 300
+      max_tokens: 200
     });
 
-    const result = response.choices[0].message.content;
-    const reasons = result.split(';').map(reason => reason.trim()).filter(reason => reason);
+    if (response.success && response.content) {
+      const rawReasons = response.content.split(';').map(reason => reason.trim()).filter(reason => reason);
+      
+      // 确保每条理由不超过80字
+      const reasons = rawReasons.map(reason => {
+        if (reason.length > 80) {
+          return reason.slice(0, 77) + '...';
+        }
+        return reason;
+      });
 
-    // 缓存结果
-    reasonsCache.set(cacheKey, reasons);
+      console.log('生成的匹配理由:', reasons);
 
-    // 限制缓存大小，避免内存泄漏
-    if (reasonsCache.size > 1000) {
-      const firstKey = reasonsCache.keys().next().value;
-      reasonsCache.delete(firstKey);
+      // 缓存结果
+      reasonsCache.set(cacheKey, reasons);
+
+      // 限制缓存大小，避免内存泄漏
+      if (reasonsCache.size > 1000) {
+        const firstKey = reasonsCache.keys().next().value;
+        reasonsCache.delete(firstKey);
+      }
+
+      return reasons;
+    } else {
+      throw new Error('DeepSeek API 生成理由失败');
     }
 
-    return reasons;
   } catch (error) {
     console.error('Generate reasons error:', error);
     const fallbackReasons = [`${professor.name}教授的研究方向与您的需求相关`];
@@ -191,6 +181,75 @@ async function generateMatchReasons(intent, professor) {
 
     return fallbackReasons;
   }
+}
+
+// 本地简化意图解析（备选方案）
+function parseIntentLocally(userInput) {
+  console.log('使用本地简化解析:', userInput);
+  
+  const input = userInput.toLowerCase();
+  const result = {
+    originalQuery: userInput,
+    isProfessorMatching: false,
+    isAchievementQuery: false,
+    isVague: true,
+    techDomains: [],
+    cooperationType: 'general',
+    requirements: [],
+    urgency: 'normal',
+    budget: 'unknown'
+  };
+
+  // 检测是否是教授匹配需求
+  const professorKeywords = ['教授', '专家', '老师', '导师', '合作', '找人', '寻找', '推荐'];
+  const hasProfessorKeyword = professorKeywords.some(keyword => input.includes(keyword));
+  
+  if (hasProfessorKeyword) {
+    result.isProfessorMatching = true;
+    result.isVague = false;
+  }
+
+  // 检测技术领域
+  const techDomainMap = {
+    '人工智能': ['ai', '人工智能', '机器学习', 'ml', '深度学习', 'deep learning'],
+    '计算机视觉': ['计算机视觉', 'cv', '图像识别', '视觉', '图像处理'],
+    '自然语言处理': ['nlp', '自然语言', '文本处理', '语言模型'],
+    '数据科学': ['数据科学', '数据分析', '大数据', 'data'],
+    '生物信息学': ['生物', '基因', '蛋白质', '生物信息'],
+    '材料科学': ['材料', '化学', '物理'],
+    '机械工程': ['机械', '制造', '工程'],
+    '电子工程': ['电子', '电气', '通信', '芯片'],
+    '环境科学': ['环境', '生态', '污染'],
+    '医学': ['医学', '医疗', '健康', '临床'],
+    '经济学': ['经济', '金融', '市场'],
+    '管理学': ['管理', '商业', '营销']
+  };
+
+  for (const [domain, keywords] of Object.entries(techDomainMap)) {
+    if (keywords.some(keyword => input.includes(keyword))) {
+      result.techDomains.push(domain);
+      result.isVague = false;
+    }
+  }
+
+  // 检测合作类型
+  if (input.includes('咨询') || input.includes('问') || input.includes('了解')) {
+    result.cooperationType = '技术咨询';
+  } else if (input.includes('合作') || input.includes('项目') || input.includes('开发')) {
+    result.cooperationType = '联合研发';
+  } else if (input.includes('培训') || input.includes('学习') || input.includes('指导')) {
+    result.cooperationType = '人才培养';
+  }
+
+  // 检测成果查询
+  const achievementKeywords = ['成果', '论文', '专利', '项目', '研究', '发表'];
+  if (achievementKeywords.some(keyword => input.includes(keyword)) && !result.isProfessorMatching) {
+    result.isAchievementQuery = true;
+    result.query = userInput;
+  }
+
+  console.log('本地解析结果:', result);
+  return result;
 }
 
 module.exports = {

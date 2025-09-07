@@ -1,17 +1,16 @@
 const { getProfessors } = require('./professorService');
 const { generateMatchReasons } = require('./intentParser');
-const { simplifyMatchReason } = require('./professorSimplificationService');
 
-// 匹配教授 - 完全按照原始服务器逻辑
+// 匹配教授 - 与原始版本逻辑完全一致
 async function matchProfessors(intent, db) {
   try {
     console.log('开始匹配教授...');
     console.log('Intent:', JSON.stringify(intent, null, 2));
     
-    // 获取所有教授数据 - 使用原始逻辑参数
+    // 获取所有教授数据 - 使用与原始代码相同的逻辑
     const allProfessors = await getProfessors({ page: 1, limit: 1000 }, db);
     console.log('获取到教授数量:', allProfessors.data.length);
-    console.log('获取到的总数:', allProfessors.pagination ? allProfessors.pagination.total : 0);
+    console.log('获取到的总数:', allProfessors.total);
 
     if (allProfessors.data.length > 0) {
       console.log('第一个教授数据示例:', JSON.stringify(allProfessors.data[0], null, 2));
@@ -22,8 +21,8 @@ async function matchProfessors(intent, db) {
     
     const matches = [];
     
-    // 对每个教授计算匹配分数 - 原始逻辑
     for (const professor of allProfessors.data) {
+      // 计算匹配分数
       const score = calculateMatchScore(intent, professor);
 
       if (score > 0.3) { // 只返回匹配度大于30%的结果
@@ -37,46 +36,21 @@ async function matchProfessors(intent, db) {
 
     console.log('匹配到的教授数量:', matches.length);
 
-    // 按分数排序 - 原始逻辑
+    // 按分数排序
     const sortedMatches = matches.sort((a, b) => b.score - a.score);
 
-    // 只为前5个匹配结果生成AI理由，提高响应速度
+    // 只为前5个匹配结果生成理由，提高响应速度
     const topMatches = sortedMatches.slice(0, 5);
-    
-    // 并行生成理由，设置超时
-    const reasonPromises = topMatches.map(async (match) => {
+    for (const match of topMatches) {
       try {
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('理由生成超时')), 5000); // 5秒超时
-        });
-        
-        const reasonPromise = generateMatchReasons(intent, match.professor);
-        match.reasons = await Promise.race([reasonPromise, timeoutPromise]);
-        console.log(`为${match.professor.name}生成AI理由:`, match.reasons);
+        match.reasons = await generateMatchReasons(intent, match.professor);
       } catch (error) {
         console.error('生成匹配理由失败:', error);
-        // 使用简化的备用理由
-        const basicReason = `${match.professor.name}教授在${match.professor.research_areas.slice(0, 2).join('、')}等领域有深入研究，匹配度${(match.score * 100).toFixed(1)}%`;
-        const simplifiedReason = simplifyMatchReason(basicReason);
-        match.reasons = [simplifiedReason];
+        match.reasons = [`${match.professor.name}教授的研究方向与您的需求相关`];
       }
-      return match;
-    });
+    }
 
-    // 等待所有理由生成完成，但不超过8秒
-    const allReasonsTimeout = new Promise((resolve) => {
-      setTimeout(() => {
-        console.log('理由生成总体超时，使用已完成的结果');
-        resolve(topMatches);
-      }, 8000);
-    });
-    
-    await Promise.race([
-      Promise.all(reasonPromises),
-      allReasonsTimeout
-    ]);
-
-    // 返回所有匹配结果，但只有前5个有详细理由 - 原始逻辑
+    // 返回所有匹配结果，但只有前5个有详细理由
     return [...topMatches, ...sortedMatches.slice(5)];
   } catch (error) {
     console.error('Matching error:', error);
@@ -84,26 +58,26 @@ async function matchProfessors(intent, db) {
   }
 }
 
-// 计算匹配分数 - 完全按照原始逻辑
+// 计算匹配分数 - 与原始版本完全一致
 function calculateMatchScore(intent, professor) {
   let score = 0;
   
-  // 研究方向匹配 (40%) - 原始权重
+  // 研究方向匹配 (40%)
   const researchMatch = calculateResearchMatch(intent, professor);
   score += researchMatch * 0.4;
   
-  // 成果相关性 (40%) - 原始权重
+  // 成果相关性 (40%)
   const achievementMatch = calculateAchievementMatch(intent, professor);
   score += achievementMatch * 0.4;
   
-  // 项目经历匹配 (20%) - 原始权重
+  // 项目经历匹配 (20%)
   const projectMatch = calculateProjectMatch(intent, professor);
   score += projectMatch * 0.2;
   
   return Math.min(score, 1.0); // 确保分数不超过1
 }
 
-// 计算研究方向匹配度 - 完全按照原始逻辑
+// 计算研究方向匹配度 - 与原始版本完全一致
 function calculateResearchMatch(intent, professor) {
   if (!intent.techDomains || intent.techDomains.length === 0) {
     return 0.5; // 如果没有指定技术领域，给中等分数
@@ -125,7 +99,7 @@ function calculateResearchMatch(intent, professor) {
   return matchCount / intent.techDomains.length;
 }
 
-// 计算成果相关性 - 完全按照原始逻辑
+// 计算成果相关性 - 与原始版本完全一致
 function calculateAchievementMatch(intent, professor) {
   const achievements = professor.achievements || [];
   if (achievements.length === 0) {
@@ -152,7 +126,7 @@ function calculateAchievementMatch(intent, professor) {
   return relevantCount / totalCount;
 }
 
-// 计算项目经历匹配度 - 完全按照原始逻辑
+// 计算项目经历匹配度 - 与原始版本完全一致
 function calculateProjectMatch(intent, professor) {
   const projects = professor.projects || [];
   if (projects.length === 0) {

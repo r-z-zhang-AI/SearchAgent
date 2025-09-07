@@ -26,7 +26,7 @@
 }
 
 .menu-icon, .add-icon {
-  font-size: 24rpx;
+  font-size: 36rpx;
   color: #333;
   font-weight: bold;
 }
@@ -45,7 +45,7 @@
 }
 
 .debug-btn {
-  font-size: 20rpx;
+  font-size: 32rpx;
   color: #666;
   padding: 10rpx;
 }
@@ -79,69 +79,6 @@
   color: #666;
   font-size: 28rpx;
   line-height: 1.5;
-}
-
-/* 思考时间指示器 */
-.thinking-indicator {
-  background: #f8f9fa;
-  border: 1rpx solid #e9ecef;
-  border-radius: 20rpx;
-  padding: 24rpx 30rpx;
-  margin: 20rpx 0 30rpx 0;
-  animation: thinking-pulse 2s ease-in-out infinite;
-}
-
-.thinking-content {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  margin-bottom: 16rpx;
-}
-
-.thinking-icon {
-  font-size: 32rpx;
-  animation: thinking-bounce 1.5s ease-in-out infinite;
-}
-
-.thinking-text {
-  color: #6c757d;
-  font-size: 26rpx;
-  line-height: 1.4;
-}
-
-.thinking-progress {
-  width: 100%;
-  height: 6rpx;
-  background: #e9ecef;
-  border-radius: 3rpx;
-  overflow: hidden;
-}
-
-.thinking-progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #007AFF, #5AC8FA);
-  border-radius: 3rpx;
-  transition: width 1s ease;
-}
-
-@keyframes thinking-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.02);
-    opacity: 0.95;
-  }
-}
-
-@keyframes thinking-bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4rpx);
-  }
 }
 
 .message {
@@ -192,74 +129,18 @@
   overflow-wrap: break-word;
   max-width: 100%;
   box-sizing: border-box;
-  flex: 1;
-  position: relative;
-}
-
-/* 打字光标动画 */
-.typing-cursor {
-  display: inline-block;
-  margin-left: 4rpx;
-  color: #007aff;
-  font-weight: bold;
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0%, 50% {
-    opacity: 1;
-  }
-  51%, 100% {
-    opacity: 0;
-  }
-}
-
-.message-wrapper {
-  display: flex;
-  align-items: flex-start;
-  gap: 15rpx;
-  width: 100%;
-}
-
-.message-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10rpx;
-  flex-shrink: 0;
-  margin-top: 15rpx;
-}
-
-.regenerate-icon, .continue-icon {
-  width: 24rpx;
-  height: 24rpx;
-}
-
-/* 消息容器 - 包含消息和对应的教授卡片 */
-.message-container {
-  width: 100%;
-  margin-bottom: 20rpx;
-}
-
-/* 该消息对应的教师卡片容器 */
-.message-teachers {
-  margin-top: 20rpx;
-  padding-left: 30rpx;
-  padding-right: 30rpx;
 }
 
 .teacher-card {
   background: white;
   border-radius: 20rpx;
-  margin: 15rpx 0;
+  margin: 20rpx 0;
   overflow: hidden;
   box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.1);
   position: relative;
   width: 100%;
+  max-width: calc(100vw - 120rpx);
   box-sizing: border-box;
-}
-
-.teacher-card.selected {
-  border: 2rpx solid #007aff;
 }
 
 .teacher-header {
@@ -306,24 +187,13 @@
 }
 
 .star-icon, .share-icon {
-  width: 40rpx;
-  height: 40rpx;
+  width: 60rpx;
+  height: 60rpx;
   color: #999;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20rpx;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.star-icon:active, .share-icon:active {
-  transform: scale(0.9);
-}
-
-.star-icon.favorited {
-  color: #FFD700;
-  filter: brightness(1.2);
+  font-size: 32rpx;
 }
 
 .teacher-content {
@@ -400,49 +270,40 @@
 .input-container {
   flex: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   background: white;
-  border-radius: 50rpx;
-  padding: 15rpx 20rpx;
+  border-radius: 40rpx;
+  padding: 20rpx 30rpx;
   min-height: 80rpx;
-  max-height: 120rpx;
+  max-height: 200rpx;
   box-sizing: border-box;
-  gap: 15rpx;
 }
 
 .message-input {
   flex: 1;
   font-size: 28rpx;
-  line-height: 1.4;
+  line-height: 1.5;
   border: none;
   outline: none;
   background: transparent;
-  min-height: 50rpx;
-  padding: 0;
+  min-height: 40rpx;
+  max-height: 160rpx;
+  resize: none;
   word-wrap: break-word;
   word-break: break-all;
 }
 
-.send-button {
-  width: 60rpx;
-  height: 60rpx;
-  background: transparent;
+.send-btn {
+  width: 80rpx;
+  height: 80rpx;
+  background: #007aff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  padding: 0;
+  color: white;
+  font-size: 32rpx;
   flex-shrink: 0;
-}
-
-.send-button.stop-button {
-  background: transparent;
-}
-
-.send-icon {
-  width: 60rpx;
-  height: 60rpx;
 }
 
 .send-btn.disabled {
@@ -450,10 +311,6 @@
 }
 
 .selection-mode .teacher-card {
-  padding-left: 60rpx;
-}
-
-.selection-mode .message {
   padding-left: 60rpx;
 }
 
@@ -488,42 +345,30 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
-  border-top: 1rpx solid #e0e0e0;
-  padding: 30rpx;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10rpx);
+  padding: 20rpx 30rpx;
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 100;
-  box-shadow: 0 -2rpx 10rpx rgba(0,0,0,0.1);
 }
 
 .action-bar-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8rpx;
-  color: #333;
+  gap: 10rpx;
+  color: white;
   font-size: 24rpx;
-  background: transparent;
-  border: none;
-  padding: 0;
-  outline: none;
-  box-shadow: none;
-}
-
-.action-bar-btn::after {
-  border: none;
 }
 
 .action-icon {
-  width: 48rpx;
-  height: 48rpx;
+  font-size: 36rpx;
 }
 
 .action-text {
-  font-size: 22rpx;
-  color: #666;
+  font-size: 20rpx;
 }
 
 @keyframes spin {

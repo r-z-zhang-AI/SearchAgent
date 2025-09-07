@@ -1,5 +1,5 @@
 <!-- pages/chat/chat.wxml - 按照设计稿重新设计 -->
-<view class="page">
+<view class="page {{showActionBar ? 'selection-mode' : ''}}">
   <!-- 顶部导航栏 -->
   <view class="navbar">
     <view class="nav-left">
@@ -22,72 +22,102 @@
         <text class="welcome-text">您好！我是浙大智能科研匹配助手，我们先从哪里开始呢？</text>
       </view>
 
-      <!-- 消息列表 -->
-      <view wx:for="{{messages}}" wx:key="id" class="message {{item.type}} {{selectedMessages.includes(item.id) ? 'selected' : ''}}"
-            bindlongpress="onMessageLongPress" data-id="{{item.id}}" data-type="message">
-
-        <!-- 选择框 -->
-        <view wx:if="{{showActionBar}}" class="selection-checkbox {{selectedMessages.includes(item.id) ? 'checked' : ''}}"
-              bindtap="toggleMessageSelection" data-id="{{item.id}}">
-          <image wx:if="{{selectedMessages.includes(item.id)}}" class="checkbox-icon" src="/images/tick.svg" mode="aspectFit"></image>
+      <!-- 思考时间提示 -->
+      <view wx:if="{{showThinkingTime}}" class="thinking-indicator">
+        <view class="thinking-content">
+          <view class="thinking-icon">🤔</view>
+          <text class="thinking-text">正在思考中...预计还需 {{thinkingCountdown}} 秒</text>
         </view>
-
-        <view class="message-content">{{item.content}}</view>
-
-        <!-- AI回答的操作按钮 -->
-        <view wx:if="{{item.type === 'assistant' && item.showActions}}" class="message-actions">
-          <image class="action-icon regenerate-icon" src="/images/start-over.svg" mode="aspectFit"
-                 bindtap="regenerateAnswer" data-id="{{item.id}}"></image>
-          <image class="action-icon continue-icon" src="/images/continue.svg" mode="aspectFit"
-                 bindtap="continueAnswer" data-id="{{item.id}}"></image>
+        <view class="thinking-progress">
+          <view class="thinking-progress-bar" style="width: {{((thinkingTime - thinkingCountdown) / thinkingTime * 100)}}%"></view>
         </view>
       </view>
 
-      <!-- 教师卡片 -->
-      <view wx:for="{{teacherCards}}" wx:key="id" class="teacher-card {{selectedMessages.includes('teacher-' + item.id) ? 'selected' : ''}}"
-            bindlongpress="onMessageLongPress" data-id="{{'teacher-' + item.id}}" data-type="teacher">
+      <!-- 消息列表 -->
+      <view wx:for="{{messages}}" wx:key="id" class="message-container">
+        <!-- 消息内容 -->
+        <view class="message {{item.type}} {{selectedMessages.includes(item.id) ? 'selected' : ''}}"
+              bindlongpress="onMessageLongPress" data-id="{{item.id}}" data-type="message">
 
-        <!-- 选择框 -->
-        <view wx:if="{{showActionBar}}" class="selection-checkbox {{selectedMessages.includes('teacher-' + item.id) ? 'checked' : ''}}"
-              bindtap="toggleMessageSelection" data-id="{{'teacher-' + item.id}}">
-          <image wx:if="{{selectedMessages.includes('teacher-' + item.id)}}" class="checkbox-icon" src="/images/tick.svg" mode="aspectFit"></image>
+          <!-- 选择框 -->
+          <view wx:if="{{showActionBar}}" class="selection-checkbox {{selectedMessages.includes(item.id) ? 'checked' : ''}}"
+                bindtap="toggleMessageSelection" data-id="{{item.id}}">
+            <image wx:if="{{selectedMessages.includes(item.id)}}" class="checkbox-icon" src="/images/tick.svg" mode="aspectFit"></image>
+          </view>
+
+          <view class="message-wrapper">
+            <view class="message-content">
+              {{item.content}}
+              <text wx:if="{{item.isStreaming}}" class="typing-cursor">|</text>
+            </view>
+            
+            <!-- AI回答的操作按钮 -->
+            <view wx:if="{{item.type === 'assistant' && item.showActions}}" class="message-actions">
+              <image class="action-icon regenerate-icon" src="/images/start-over.svg" mode="aspectFit"
+                     bindtap="regenerateAnswer" data-id="{{item.id}}"></image>
+              <image class="action-icon continue-icon" src="/images/continue.svg" mode="aspectFit"
+                     bindtap="continueAnswer" data-id="{{item.id}}"></image>
+            </view>
+          </view>
         </view>
 
-        <view class="teacher-header">
-          <view class="teacher-basic">
-            <text class="teacher-name">{{item.name}}</text>
-            <text class="teacher-title">{{item.title}}</text>
-          </view>
-          <view class="teacher-actions">
-            <image class="star-icon" src="/images/star.svg" mode="aspectFit"></image>
-            <image class="share-icon" src="/images/share.svg" mode="aspectFit"></image>
-          </view>
-        </view>
+        <!-- 该消息对应的教师卡片 -->
+        <view wx:if="{{item.teacherCards && item.teacherCards.length > 0}}" class="message-teachers">
+          <view wx:for="{{item.teacherCards}}" wx:for-item="teacher" wx:key="id" 
+                class="teacher-card {{selectedMessages.includes('teacher-' + teacher.id) ? 'selected' : ''}}"
+                bindlongpress="onMessageLongPress" data-id="{{'teacher-' + teacher.id}}" data-type="teacher">
 
-        <view class="teacher-content">
-          <view class="teacher-info-grid">
-            <view class="info-item">
-              <text class="info-label">研究方向:</text>
-              <text class="info-value">{{item.research}}</text>
+            <!-- 选择框 -->
+            <view wx:if="{{showActionBar}}" class="selection-checkbox {{selectedMessages.includes('teacher-' + teacher.id) ? 'checked' : ''}}"
+                  bindtap="toggleMessageSelection" data-id="{{'teacher-' + teacher.id}}">
+              <image wx:if="{{selectedMessages.includes('teacher-' + teacher.id)}}" class="checkbox-icon" src="/images/tick.svg" mode="aspectFit"></image>
             </view>
-            <view class="info-item">
-              <text class="info-label">所属学院:</text>
-              <text class="info-value">{{item.department}}</text>
-            </view>
-            <view class="info-item">
-              <text class="info-label">联系邮箱:</text>
-              <text class="info-value">{{item.email}}</text>
-            </view>
-            <view class="info-item">
-              <text class="info-label">办公地点:</text>
-              <text class="info-value">{{item.office}}</text>
-            </view>
-          </view>
 
-          <view wx:if="{{item.achievements}}" class="teacher-achievements">
-            <text class="achievements-title">主要成就:</text>
-            <view class="achievements-list">
-              <text wx:for="{{item.achievements}}" wx:key="*this" class="achievement-item">• {{item}}</text>
+            <view class="teacher-header">
+              <view class="teacher-basic">
+                <text class="teacher-name">{{teacher.name}}</text>
+                <text class="teacher-title">{{teacher.title}}</text>
+              </view>
+              <view class="teacher-actions">
+                <image class="star-icon {{teacher.isFavorited ? 'favorited' : ''}}" 
+                       src="/images/star.svg" 
+                       mode="aspectFit"
+                       bindtap="toggleTeacherFavorite" 
+                       data-teacher-id="{{teacher.id}}"></image>
+                <image class="share-icon" 
+                       src="/images/share.svg" 
+                       mode="aspectFit"
+                       bindtap="shareTeacher" 
+                       data-teacher-id="{{teacher.id}}"></image>
+              </view>
+            </view>
+
+            <view class="teacher-content">
+              <view class="teacher-info-grid">
+                <view class="info-item">
+                  <text class="info-label">研究方向:</text>
+                  <text class="info-value">{{teacher.research}}</text>
+                </view>
+                <view class="info-item">
+                  <text class="info-label">所属学院:</text>
+                  <text class="info-value">{{teacher.department}}</text>
+                </view>
+                <view class="info-item">
+                  <text class="info-label">联系邮箱:</text>
+                  <text class="info-value">{{teacher.email}}</text>
+                </view>
+                <view class="info-item">
+                  <text class="info-label">办公地点:</text>
+                  <text class="info-value">{{teacher.office}}</text>
+                </view>
+              </view>
+
+              <view wx:if="{{teacher.achievements}}" class="teacher-achievements">
+                <text class="achievements-title">主要成就:</text>
+                <view class="achievements-list">
+                  <text wx:for="{{teacher.achievements}}" wx:key="*this" class="achievement-item">• {{item}}</text>
+                </view>
+              </view>
             </view>
           </view>
         </view>

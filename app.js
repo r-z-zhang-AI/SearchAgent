@@ -7,6 +7,10 @@ App({
     useCloudFunction: true,
     // 后端API地址 - 备用HTTP方式（需要会员）
     apiBase: 'https://cloud1-6g8dk2rk74e3d4e9.service.tcloudbase.com/api',
+    // 后端API地址备选列表
+    apiBaseOptions: [
+      'https://cloud1-6g8dk2rk74e3d4e9.service.tcloudbase.com/api'
+    ],
     // 用户信息
     userInfo: null,
     // 对话ID
@@ -103,30 +107,54 @@ App({
       };
 
       // 如果有数据，将其转换为JSON字符串
-      if (options.data && Object.keys(options.data).length > 0) {
+      if (options.data && typeof options.data === 'object' && Object.keys(options.data).length > 0) {
         requestData.body = JSON.stringify(options.data);
       }
 
       console.log('云函数调用参数:', requestData);
 
+      // 设置前端超时处理
+      const timeoutId = setTimeout(() => {
+        console.log('前端调用超时');
+        reject(new Error('请求超时，请稍后重试'));
+      }, 28000); // 28秒超时，比云函数稍短
+
       wx.cloud.callFunction({
         name: 'api',
         data: requestData,
         success: (res) => {
+          clearTimeout(timeoutId);
           console.log('云函数调用成功:', res);
           if (res.result) {
+            // 检查是否是超时错误
+            if (res.result.timeout) {
+              reject(new Error(res.result.message || '服务处理超时'));
+              return;
+            }
             resolve(res.result);
           } else {
             reject(new Error('云函数返回数据为空'));
           }
         },
         fail: (err) => {
+          clearTimeout(timeoutId);
           console.error('云函数调用失败:', err);
-          wx.showToast({
-            title: '服务调用失败',
-            icon: 'none'
-          });
-          reject(err);
+          
+          // 检查是否是超时错误
+          if (err.errCode === -504003 || err.errMsg?.includes('timeout') || err.errMsg?.includes('超时')) {
+            wx.showToast({
+              title: '处理超时，请重试',
+              icon: 'none',
+              duration: 3000
+            });
+            reject(new Error('处理超时，请简化问题后重试'));
+          } else {
+            wx.showToast({
+              title: '服务调用失败',
+              icon: 'none'
+            });
+            reject(err);
+          }
         }
       });
     });
@@ -185,18 +213,54 @@ App({
 
   // 测试后端连接
   testBackendConnection() {
-    console.log('测试后端连接...');
-    this.tryConnectToBackend(0);
+    console.log('测试云函数连接...');
+    
+    // 使用云函数进行健康检查
+    if (this.globalData.useCloudFunction) {
+      wx.cloud.callFunction({
+        name: 'api',
+        data: {
+          httpMethod: 'GET',
+          path: '/health',
+          headers: {}
+        },
+        success: (res) => {
+          console.log('✅ 云函数连接成功:', res);
+          wx.showToast({
+            title: '云函数连接正常',
+            icon: 'success',
+            duration: 2000
+          });
+        },
+        fail: (err) => {
+          console.error('❌ 云函数连接失败:', err);
+          wx.showModal({
+            title: '云函数连接失败',
+            content: '请检查：\n1. 云函数是否正确部署\n2. 云开发环境是否正常\n3. 网络连接是否正常',
+            showCancel: false
+          });
+        }
+      });
+    } else {
+      // 如果不使用云函数，则进行HTTP连接测试
+      this.tryConnectToBackend(0);
+    }
   },
 
   // 尝试连接到后端（递归尝试所有地址）
   tryConnectToBackend(index) {
+    // 如果使用云函数模式，跳过HTTP连接测试
+    if (this.globalData.useCloudFunction) {
+      console.log('使用云函数模式，跳过HTTP连接测试');
+      return;
+    }
+
     if (index >= this.globalData.apiBaseOptions.length) {
       // 所有地址都尝试失败
       console.error('所有后端地址都连接失败');
       wx.showModal({
         title: '网络连接失败',
-        content: '无法连接到后端服务器，请检查：\n1. 后端服务是否启动 (npm start)\n2. 开发者工具是否开启"不校验合法域名"\n3. 手机和电脑是否在同一WiFi网络\n4. 防火墙是否阻止了5000端口\n5. 尝试重启后端服务',
+        content: '无法连接到后端服务器，请检查：\n1. 云函数是否正确部署\n2. 云开发环境是否正常\n3. 网络连接是否正常',
         showCancel: true,
         cancelText: '取消',
         confirmText: '重试',

@@ -31,7 +31,7 @@ ${context.map((msg, i) => `${i % 2 === 0 ? '用户' : '助手'}：${msg}`).join(
 
     // 设置超时处理
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('AI响应超时')), 8000); // 8秒超时
+      setTimeout(() => reject(new Error('AI响应超时')), 15000); // 15秒超时
     });
 
     const apiPromise = client.chat.completions.create({
@@ -47,8 +47,7 @@ ${context.map((msg, i) => `${i % 2 === 0 ? '用户' : '助手'}：${msg}`).join(
         }
       ],
       temperature: 0.7,
-      max_tokens: 300,
-      timeout: 6000 // 6秒API超时
+      max_tokens: 300
     });
 
     const response = await Promise.race([apiPromise, timeoutPromise]);
